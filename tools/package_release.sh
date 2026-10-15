@@ -18,6 +18,15 @@
 # Usage: tools/package_release.sh v0.1.0
 set -eu
 
+# --- isolation: build crate-locally, smoke ONLY what the tarball carries ---
+# tools/env.sh exports a shared CARGO_TARGET_DIR. Left set, cargo writes the
+# fresh hyb and libhyrt.a there while step 3 copies the crate-local
+# target/ paths, so a stale archive (the worklog session-8 trap) ships and
+# gets touched "fresh". HYB_RUNTIME_DIR / HYB_CARGO_BIN / CARGO_TARGET_DIR
+# would also let the step-5 smoke resolve a runtime, a staticlib, or a cargo
+# from outside the tarball and pass on files users never receive.
+unset CARGO_TARGET_DIR HYB_RUNTIME_DIR HYB_CARGO_BIN
+
 VER="${1:?usage: package_release.sh <version-tag, e.g. v0.1.0>}"
 VERNUM="${VER#v}"
 REPO_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
